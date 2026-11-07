@@ -95,6 +95,7 @@ fun DashboardScreen(
   val lastTriggeredAction by FluidGestureAccessibilityService.lastTriggeredAction.collectAsState()
 
   var hasOverlayPermission by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
+  var isBatteryOptimized by remember { mutableStateOf(ChineseOemHelper.isIgnoringBatteryOptimizations(context)) }
   var showRescueDialog by remember { mutableStateOf(false) }
 
   if (showRescueDialog) {
@@ -104,12 +105,15 @@ fun DashboardScreen(
     )
   }
 
-  // Re-check permission periodically or on focus
+  // Re-check permissions periodically or on focus
   LaunchedEffect(Unit) {
     hasOverlayPermission = Settings.canDrawOverlays(context)
+    isBatteryOptimized = ChineseOemHelper.isIgnoringBatteryOptimizations(context)
   }
 
-  val isFullyFunctional = isServiceActive && hasOverlayPermission && settings.serviceEnabled
+  // Battery restriction is the single most common cause of HyperOS/MIUI silently killing the
+  // gesture service hours after setup, so the "fully functional" badge must not go green without it.
+  val isFullyFunctional = isServiceActive && hasOverlayPermission && isBatteryOptimized && settings.serviceEnabled
 
   Column(
     modifier = Modifier
@@ -385,7 +389,6 @@ fun DashboardScreen(
     Spacer(modifier = Modifier.height(10.dp))
 
     // Chinese OEM & Anti-Kill Optimization Card
-    val isBatteryOptimized = remember { ChineseOemHelper.isIgnoringBatteryOptimizations(context) }
     Card(
       shape = RoundedCornerShape(18.dp),
       colors = CardDefaults.cardColors(
