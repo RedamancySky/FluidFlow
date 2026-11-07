@@ -1,0 +1,6 @@
+{
+  "name": "FluidFlow",
+  "description": "Hệ thống điều hướng cử chỉ mượt mà (Fluid Gestures) cho Android khi dùng launcher bên thứ ba",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

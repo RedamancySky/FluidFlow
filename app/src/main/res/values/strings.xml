@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">FluidFlow</string>
+    <string name="app_full_title">FluidFlow Gestures</string>
+    <string name="app_tagline">Hệ thống cử chỉ điều hướng mượt mà cho Launcher</string>
+    <string name="accessibility_service_description">Dịch vụ FluidFlow cho phép nhận diện cử chỉ vuốt từ các cạnh màn hình và thực thi các thao tác hệ thống (Back, Home, Đa nhiệm, Mở thông báo, Chụp màn hình) khi sử dụng launcher bên thứ ba.</string>
+</resources>
