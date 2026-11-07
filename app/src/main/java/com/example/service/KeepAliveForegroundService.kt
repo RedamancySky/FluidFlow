@@ -8,12 +8,23 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
 import com.example.R
+import com.example.util.AccessibilityWatchdog
 
 class KeepAliveForegroundService : Service() {
+
+  private val handler = Handler(Looper.getMainLooper())
+  private val healthCheckRunnable = object : Runnable {
+    override fun run() {
+      AccessibilityWatchdog.checkAndRecover(applicationContext)
+      handler.postDelayed(this, HEALTH_CHECK_INTERVAL_MS)
+    }
+  }
 
   override fun onCreate() {
     super.onCreate()
@@ -21,6 +32,7 @@ class KeepAliveForegroundService : Service() {
     val notification = buildForegroundNotification()
     startForeground(NOTIFICATION_ID, notification)
     isRunning = true
+    handler.postDelayed(healthCheckRunnable, HEALTH_CHECK_INTERVAL_MS)
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -45,6 +57,7 @@ class KeepAliveForegroundService : Service() {
 
   override fun onDestroy() {
     isRunning = false
+    handler.removeCallbacks(healthCheckRunnable)
     super.onDestroy()
   }
 

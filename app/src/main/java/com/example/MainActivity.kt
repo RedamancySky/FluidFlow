@@ -1,12 +1,17 @@
 package com.example
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -74,11 +79,15 @@ class MainActivity : ComponentActivity() {
   private lateinit var repository: GesturePreferencesRepository
   private var showEmergencyRescueModal by mutableStateOf(false)
 
+  private val notificationPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     hideSystemNavigationBar()
     repository = GesturePreferencesRepository(applicationContext)
+    requestNotificationPermissionIfNeeded()
 
     if (intent?.getBooleanExtra(EXTRA_EMERGENCY_RESCUE, false) == true) {
       showEmergencyRescueModal = true
@@ -107,6 +116,17 @@ class MainActivity : ComponentActivity() {
     super.onWindowFocusChanged(hasFocus)
     if (hasFocus) {
       hideSystemNavigationBar()
+    }
+  }
+
+  private fun requestNotificationPermissionIfNeeded() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    val granted = ContextCompat.checkSelfPermission(
+      this,
+      Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
+    if (!granted) {
+      notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
   }
 
