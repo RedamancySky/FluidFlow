@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+
+# Session scratch files (CI debugging)
+.ci_poll*.sh
+.run_check*.json
+.jobs.json
+.job.log
