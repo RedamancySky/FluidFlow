@@ -123,6 +123,7 @@ class KeepAliveForegroundService : Service() {
   companion object {
     private const val CHANNEL_ID = "fluid_flow_keep_alive"
     private const val NOTIFICATION_ID = 1001
+    private const val HEALTH_CHECK_INTERVAL_MS = 2 * 60 * 1000L
     const val ACTION_STOP = "com.example.STOP_KEEP_ALIVE"
     const val ACTION_RESTORE_NAV_BAR = "com.example.RESTORE_NAV_BAR"
 
