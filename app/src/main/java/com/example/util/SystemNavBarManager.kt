@@ -183,6 +183,70 @@ object SystemNavBarManager {
     }
   }
 
+  fun openDeveloperSettings(context: Context): Boolean {
+    return try {
+      val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      }
+      context.startActivity(intent)
+      true
+    } catch (_: Exception) {
+      try {
+        val intent = Intent(Settings.ACTION_DEVICE_INFO_SETTINGS).apply {
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
+        true
+      } catch (_: Exception) {
+        false
+      }
+    }
+  }
+
+  fun openShizukuOnPlayStore(context: Context): Boolean {
+    val playStoreIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=moe.shizuku.privileged.api")).apply {
+      flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    }
+    return try {
+      context.startActivity(playStoreIntent)
+      true
+    } catch (_: Exception) {
+      try {
+        val webIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api")).apply {
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(webIntent)
+        true
+      } catch (_: Exception) {
+        false
+      }
+    }
+  }
+
+  fun openTermuxDownload(context: Context): Boolean {
+    return try {
+      val webIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://f-droid.org/packages/com.termux/")).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      }
+      context.startActivity(webIntent)
+      true
+    } catch (_: Exception) {
+      false
+    }
+  }
+
+  fun getInternalGrantPermissionCommand(context: Context): String {
+    return "pm grant ${context.packageName} android.permission.WRITE_SECURE_SETTINGS"
+  }
+
+  fun getInternalHideCommand(): String {
+    return "settings put global policy_control immersive.navigation=*"
+  }
+
+  fun getInternalRestoreCommand(): String {
+    return "settings put global policy_control \"\""
+  }
+
   fun getNavigationGuidePath(brand: ChineseOemHelper.OemBrand): String {
     return when (brand) {
       ChineseOemHelper.OemBrand.XIAOMI -> "Cài đặt > Màn hình chính > Điều hướng hệ thống > Chọn 'Cử chỉ' (Hoặc: Cài đặt bổ sung > Hiển thị toàn màn hình)"

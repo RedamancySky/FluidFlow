@@ -44,6 +44,12 @@ import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.SettingsApplications
 import com.example.ui.components.EmergencyRescueDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -95,6 +101,7 @@ fun HideNavBarScreen(
   val isRootAvailable = remember { SystemNavBarManager.isRootAvailable() }
   val settings by repository.settings.collectAsState()
   var showRescueModal by remember { mutableStateOf(false) }
+  var adbMethodTab by remember { mutableStateOf(0) }
 
   if (showRescueModal) {
     EmergencyRescueDialog(
@@ -582,204 +589,526 @@ fun HideNavBarScreen(
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    // Method 2: ADB Command (No Root)
+    // Method 2: Shizuku / Termux / ADB
     Text(
-      text = "CÁCH 2: LỆNH ADB 1 LẦN (KHÔNG CẦN ROOT)",
+      text = "CÁCH 2: DÙNG SHIZUKU & TERMUX (KHÔNG CẦN MÁY TÍNH) HOẶC ADB",
       style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
       color = MaterialTheme.colorScheme.primary
     )
 
     Spacer(modifier = Modifier.height(8.dp))
 
+    // Direct Answer: Is ADB Mandatory?
     Card(
-      shape = RoundedCornerShape(18.dp),
+      shape = RoundedCornerShape(16.dp),
       colors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
       ),
-      modifier = Modifier.fillMaxWidth()
+      modifier = Modifier
+        .fillMaxWidth()
+        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
     ) {
-      Column(modifier = Modifier.padding(18.dp)) {
+      Column(modifier = Modifier.padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-          Box(
-            modifier = Modifier
-              .size(38.dp)
-              .clip(CircleShape)
-              .background(
-                if (hasSecurePerm) Color(0xFF10B981).copy(alpha = 0.2f)
-                else MaterialTheme.colorScheme.surfaceVariant
-              ),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(
-              imageVector = if (hasSecurePerm) Icons.Default.CheckCircle else Icons.Default.Terminal,
-              contentDescription = null,
-              tint = if (hasSecurePerm) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
-              modifier = Modifier.size(20.dp)
-            )
-          }
-
-          Spacer(modifier = Modifier.width(12.dp))
-
-          Column {
-            Text(
-              text = if (hasSecurePerm) "Quyền ADB: ĐÃ ĐƯỢC CẤP THÀNH CÔNG!" else "Cấp Quyền Qua Máy Tính Hoặc Shizuku",
-              style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-              color = if (hasSecurePerm) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-              text = if (hasSecurePerm) "Ứng dụng có thể tự động ẩn 3 phím toàn bộ máy."
-              else "Chạy lệnh bên dưới 1 lần để ứng dụng tự ẩn 3 nút.",
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // ADB Command Box
-        val adbCmd = SystemNavBarManager.getAdbGrantPermissionCommand(context)
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF030712))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
-            .padding(12.dp)
-        ) {
+          Icon(
+            imageVector = Icons.Default.HelpOutline,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+          )
+          Spacer(modifier = Modifier.width(8.dp))
           Text(
-            text = adbCmd,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            color = Color(0xFF00E5FF)
+            text = "CÓ BẮT BUỘC DÙNG ADB KHÔNG?",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp),
+            color = MaterialTheme.colorScheme.primary
           )
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        OutlinedButton(
-          onClick = {
-            val clip = ClipData.newPlainText("ADB Command", adbCmd)
-            clipboard.setPrimaryClip(clip)
-            Toast.makeText(context, "Đã sao chép câu lệnh ADB!", Toast.LENGTH_SHORT).show()
-          },
-          shape = RoundedCornerShape(12.dp),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(text = "Sao Chép Lệnh ADB Cấp Quyền", fontWeight = FontWeight.SemiBold)
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Direct ADB hide command
-        val directHideCmd = SystemNavBarManager.getAdbDirectHideCommand()
-        Text(
-          text = "Hoặc chạy trực tiếp lệnh ẩn 3 phím bằng ADB:",
-          style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
         Spacer(modifier = Modifier.height(6.dp))
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF030712))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
-            .padding(12.dp)
-        ) {
+        Text(
+          text = "• KHÔNG BẮT BUỘC: Nếu không muốn gõ lệnh, bạn có thể dùng 'Cách 1' (chuyển sang cử chỉ trong Cài đặt máy) hoặc dùng 'Giải pháp tức thì' (Nâng viền vuốt lên trên 3 phím +48dp) để không bị chạm đè, dùng ngay 0 giây!\n" +
+              "• CHỈ DÙNG KHI: Bạn muốn ẩn triệt để 100% thanh 3 phím đen dưới đáy trên các launcher ngoài (Nova, Smart, Niagara...). Bạn hoàn toàn có thể làm trực tiếp trên điện thoại bằng Shizuku + Termux mà không cần máy tính PC!",
+          style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+          color = MaterialTheme.colorScheme.onSurface
+        )
+      }
+    }
+
+    Spacer(modifier = Modifier.height(14.dp))
+
+    // Selector: Phone (Shizuku/Termux) vs PC (ADB Cable)
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+      FilterChip(
+        selected = adbMethodTab == 0,
+        onClick = { adbMethodTab = 0 },
+        leadingIcon = {
+          Icon(imageVector = Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(16.dp))
+        },
+        label = { Text("📱 Trên Điện Thoại (Shizuku + Termux)", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = MaterialTheme.colorScheme.primary,
+          selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        modifier = Modifier.weight(1f)
+      )
+
+      FilterChip(
+        selected = adbMethodTab == 1,
+        onClick = { adbMethodTab = 1 },
+        leadingIcon = {
+          Icon(imageVector = Icons.Default.Computer, contentDescription = null, modifier = Modifier.size(16.dp))
+        },
+        label = { Text("💻 Dùng Máy Tính (ADB USB)", fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp) },
+        colors = FilterChipDefaults.filterChipColors(
+          selectedContainerColor = MaterialTheme.colorScheme.primary,
+          selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        modifier = Modifier.weight(1f)
+      )
+    }
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    if (adbMethodTab == 0) {
+      // TAB 0: SHIZUKU + TERMUX GUIDE (NO PC REQUIRED)
+      Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+          containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+          // Status indicator
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+              modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(
+                  if (hasSecurePerm) Color(0xFF10B981).copy(alpha = 0.2f)
+                  else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ),
+              contentAlignment = Alignment.Center
+            ) {
+              Icon(
+                imageVector = if (hasSecurePerm) Icons.Default.CheckCircle else Icons.Default.PhoneAndroid,
+                contentDescription = null,
+                tint = if (hasSecurePerm) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+              )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+              Text(
+                text = if (hasSecurePerm) "QUYỀN HỆ THỐNG: ĐÃ ĐƯỢC CẤP THÀNH CÔNG!" else "HƯỚNG DẪN SHIZUKU + TERMUX",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = if (hasSecurePerm) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurface
+              )
+              Text(
+                text = if (hasSecurePerm) "Bạn có thể gạt công tắc phía trên để ẩn 3 phím." else "Thực hiện lần lượt 4 bước đơn giản dưới đây:",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            }
+          }
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // Step 1: Developer Options & Wireless Debugging
+          Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+          ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+              Text(
+                text = "BƯỚC 1: Bật Tùy Chọn Nhà Phát Triển & Gỡ Lỗi Không Dây",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Text(
+                text = "1. Mở Cài đặt > Giới thiệu điện thoại > Nhấn liên tục 7 lần vào 'Số hiệu bản dựng' (hoặc 'Phiên bản MIUI/HyperOS') để mở khóa chế độ nhà phát triển.\n" +
+                    "2. Vào 'Tùy chọn nhà phát triển' > Bật 'Gỡ lỗi USB' và 'Gỡ lỗi không dây' (Wireless Debugging).\n" +
+                    "⚠️ Dòng Xiaomi/POCO: Bắt buộc bật thêm 'Cài đặt qua USB' và 'Gỡ lỗi USB (Cài đặt bảo mật)'.",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Spacer(modifier = Modifier.height(10.dp))
+              Button(
+                onClick = {
+                  val opened = SystemNavBarManager.openDeveloperSettings(context)
+                  if (!opened) Toast.makeText(context, "Vui lòng vào Cài đặt để mở Tùy chọn nhà phát triển", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("open_dev_settings_button")
+              ) {
+                Icon(imageVector = Icons.Default.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Mở Tùy Chọn Nhà Phát Triển", fontSize = 12.sp)
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // Step 2: Install and Start Shizuku
+          Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+          ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+              Text(
+                text = "BƯỚC 2: Cài Đặt & Ghép Nối Shizuku (Không Cần PC)",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Text(
+                text = "1. Cài đặt Shizuku từ Google Play Store (hoàn toàn miễn phí).\n" +
+                    "2. Kết nối điện thoại với mạng Wi-Fi.\n" +
+                    "3. Mở Shizuku > Tại mục 'Khởi động qua gỡ lỗi không dây', nhấn 'Ghép nối' (Pairing) > Nhập mã 6 chữ số từ thông báo hệ thống.\n" +
+                    "4. Nhấn 'Khởi động' (Start) trong Shizuku -> Thấy 'Shizuku đang chạy' là xong!",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Spacer(modifier = Modifier.height(10.dp))
+              OutlinedButton(
+                onClick = { SystemNavBarManager.openShizukuOnPlayStore(context) },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("open_shizuku_play_store_button")
+              ) {
+                Icon(imageVector = Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Mở Shizuku Trên Google Play Store", fontSize = 12.sp)
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // Step 3: Install Termux & Setup Rish
+          Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+          ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+              Text(
+                text = "BƯỚC 3: Cài Đặt Termux & Kích Hoạt Rish",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Text(
+                text = "1. Cài đặt ứng dụng Termux (khuyên dùng bản F-Droid mới nhất).\n" +
+                    "2. Trong ứng dụng Shizuku: Bấm 'Sử dụng Shizuku trong ứng dụng đầu cuối' > Bấm 'Xuất tệp rish' để cài đặt vào Termux.\n" +
+                    "3. Mở Termux, gõ lệnh: rish rồi nhấn phím Enter trên bàn phím.\n" +
+                    "4. Chọn 'Cho phép mọi lúc' (Allow all the time) khi Shizuku hiện thông báo xin cấp quyền.",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Spacer(modifier = Modifier.height(10.dp))
+              OutlinedButton(
+                onClick = { SystemNavBarManager.openTermuxDownload(context) },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("download_termux_button")
+              ) {
+                Icon(imageVector = Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Tải Termux (Bản F-Droid Mới Nhất)", fontSize = 12.sp)
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // Step 4: Run Commands in Termux
+          Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+          ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+              Text(
+                text = "BƯỚC 4: Chạy Lần Lượt Các Lệnh Trong Termux (Sau khi gõ rish)",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.primary
+              )
+              Spacer(modifier = Modifier.height(4.dp))
+              Text(
+                text = "💡 Lưu ý: Khi ở trong môi trường rish của Termux, bạn KHÔNG cần gõ 'adb shell', chỉ cần gõ trực tiếp các lệnh dưới:",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+
+              Spacer(modifier = Modifier.height(12.dp))
+
+              // Command 1: Grant Secure Settings (Recommended)
+              val cmd1 = SystemNavBarManager.getInternalGrantPermissionCommand(context)
+              Text(
+                text = "Lệnh 1 (Khuyên dùng nhất - Chạy 1 lần duy nhất):",
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                color = Color(0xFF00E5FF)
+              )
+              Text(
+                text = "Cấp quyền cho FluidFlow tự động bật/tắt ẩn 3 phím bằng công tắc trong app mãi mãi, sau này không bao giờ phải chạy lệnh lại nữa!",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(10.dp))
+                  .background(Color(0xFF030712))
+                  .padding(10.dp)
+              ) {
+                Text(text = cmd1, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF00E5FF))
+              }
+              Spacer(modifier = Modifier.height(6.dp))
+              OutlinedButton(
+                onClick = {
+                  val clip = ClipData.newPlainText("Command 1", cmd1)
+                  clipboard.setPrimaryClip(clip)
+                  Toast.makeText(context, "Đã sao chép Lệnh 1 (Cấp quyền)!", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("copy_cmd1_button")
+              ) {
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Sao Chép Lệnh 1 (Cấp Quyền 1 Lần)", fontSize = 11.5.sp)
+              }
+
+              Spacer(modifier = Modifier.height(14.dp))
+
+              // Command 2: Direct Hide
+              val cmd2 = SystemNavBarManager.getInternalHideCommand()
+              Text(
+                text = "Lệnh 2 (Lệnh ẩn trực tiếp thanh 3 phím toàn màn hình):",
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                color = Color(0xFF10B981)
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(10.dp))
+                  .background(Color(0xFF030712))
+                  .padding(10.dp)
+              ) {
+                Text(text = cmd2, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF10B981))
+              }
+              Spacer(modifier = Modifier.height(6.dp))
+              OutlinedButton(
+                onClick = {
+                  val clip = ClipData.newPlainText("Command 2", cmd2)
+                  clipboard.setPrimaryClip(clip)
+                  Toast.makeText(context, "Đã sao chép Lệnh 2 (Ẩn 3 phím)!", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("copy_cmd2_button")
+              ) {
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Sao Chép Lệnh 2 (Ẩn 3 Phím Trực Tiếp)", fontSize = 11.5.sp)
+              }
+
+              Spacer(modifier = Modifier.height(14.dp))
+
+              // Command 3: Direct Restore
+              val cmd3 = SystemNavBarManager.getInternalRestoreCommand()
+              Text(
+                text = "Lệnh 3 (Lệnh khôi phục lại 3 phím mặc định):",
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                color = Color(0xFFF59E0B)
+              )
+              Spacer(modifier = Modifier.height(6.dp))
+              Box(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(10.dp))
+                  .background(Color(0xFF030712))
+                  .padding(10.dp)
+              ) {
+                Text(text = cmd3, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFFF59E0B))
+              }
+              Spacer(modifier = Modifier.height(6.dp))
+              OutlinedButton(
+                onClick = {
+                  val clip = ClipData.newPlainText("Command 3", cmd3)
+                  clipboard.setPrimaryClip(clip)
+                  Toast.makeText(context, "Đã sao chép Lệnh 3 (Khôi phục)!", Toast.LENGTH_SHORT).show()
+                },
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().testTag("copy_cmd3_button")
+              ) {
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Sao Chép Lệnh 3 (Khôi Phục 3 Phím)", fontSize = 11.5.sp)
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // TAB 1: PC ADB GUIDE
+      Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+          containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+        ),
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+              modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+              contentAlignment = Alignment.Center
+            ) {
+              Icon(imageVector = Icons.Default.Computer, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+              Text(text = "HƯỚNG DẪN CẤP QUYỀN QUA MÁY TÍNH (PC)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+              Text(text = "Dành cho người có máy tính và cáp kết nối USB", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+          }
+
+          Spacer(modifier = Modifier.height(14.dp))
+
           Text(
-            text = directHideCmd,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
+            text = "1. Bật 'Gỡ lỗi USB' trong Tùy chọn nhà phát triển trên điện thoại.\n" +
+                "2. Cắm cáp kết nối điện thoại với máy tính, mở Command Prompt hoặc PowerShell.\n" +
+                "3. Chạy lần lượt các câu lệnh sau:",
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+          )
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // PC ADB Command 1
+          val pcAdb1 = SystemNavBarManager.getAdbGrantPermissionCommand(context)
+          Text(text = "Lệnh 1 (Cấp quyền 1 lần cho FluidFlow):", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color(0xFF00E5FF))
+          Spacer(modifier = Modifier.height(4.dp))
+          Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF030712)).padding(10.dp)) {
+            Text(text = pcAdb1, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF00E5FF))
+          }
+          Spacer(modifier = Modifier.height(6.dp))
+          OutlinedButton(
+            onClick = {
+              val clip = ClipData.newPlainText("PC ADB Cmd 1", pcAdb1)
+              clipboard.setPrimaryClip(clip)
+              Toast.makeText(context, "Đã sao chép lệnh ADB cấp quyền!", Toast.LENGTH_SHORT).show()
+            },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = "Sao Chép Lệnh ADB Cấp Quyền", fontSize = 11.5.sp)
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // PC ADB Command 2
+          val pcAdb2 = SystemNavBarManager.getAdbDirectHideCommand()
+          Text(text = "Lệnh 2 (Ẩn 3 phím trực tiếp bằng ADB):", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color(0xFF10B981))
+          Spacer(modifier = Modifier.height(4.dp))
+          Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF030712)).padding(10.dp)) {
+            Text(text = pcAdb2, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF10B981))
+          }
+          Spacer(modifier = Modifier.height(6.dp))
+          OutlinedButton(
+            onClick = {
+              val clip = ClipData.newPlainText("PC ADB Cmd 2", pcAdb2)
+              clipboard.setPrimaryClip(clip)
+              Toast.makeText(context, "Đã sao chép lệnh ADB ẩn trực tiếp!", Toast.LENGTH_SHORT).show()
+            },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = "Sao Chép Lệnh ADB Ẩn Trực Tiếp", fontSize = 11.5.sp)
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          // PC ADB Command 3
+          val pcAdb3 = SystemNavBarManager.getAdbRestoreCommand()
+          Text(text = "Lệnh 3 (Khôi phục lại 3 phím bằng ADB):", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), color = Color(0xFFF59E0B))
+          Spacer(modifier = Modifier.height(4.dp))
+          Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF030712)).padding(10.dp)) {
+            Text(text = pcAdb3, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFFF59E0B))
+          }
+          Spacer(modifier = Modifier.height(6.dp))
+          OutlinedButton(
+            onClick = {
+              val clip = ClipData.newPlainText("PC ADB Cmd 3", pcAdb3)
+              clipboard.setPrimaryClip(clip)
+              Toast.makeText(context, "Đã sao chép lệnh ADB khôi phục!", Toast.LENGTH_SHORT).show()
+            },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = "Sao Chép Lệnh ADB Khôi Phục", fontSize = 11.5.sp)
+          }
+        }
+      }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Highlighted FAQ on ADB Conflict
+    Card(
+      shape = RoundedCornerShape(16.dp),
+      colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+      ),
+      modifier = Modifier
+        .fillMaxWidth()
+        .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+    ) {
+      Column(modifier = Modifier.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = Color(0xFF10B981),
+            modifier = Modifier.size(20.dp)
+          )
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = "CÓ BỊ XUNG ĐỘT KHI VÀO CÀI ĐẶT BẬT LẠI?",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp),
             color = Color(0xFF10B981)
           )
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Direct ADB restore command
-        val directRestoreCmd = "adb shell settings put global policy_control \"\""
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-          text = "Lệnh ADB khôi phục lại 3 phím mặc định (nếu muốn trả về gốc):",
-          style = MaterialTheme.typography.bodySmall,
+          text = "• HOÀN TOÀN KHÔNG BỊ XUNG ĐỘT HOẶC LỖI MÁY:",
+          style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+          color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+          text = "1. Lệnh 'policy_control' chỉ là cờ hiển thị giao diện (Display Policy) của Android, hoàn toàn không sửa đổi file hệ thống hay can thiệp vào ROM.\n" +
+              "2. Khi bạn vào Cài đặt điện thoại bật lại 3 phím hoặc chuyển sang cử chỉ gốc, Hệ thống Android (SystemUI) sẽ tự động nạp lại giao diện bình thường.\n" +
+              "3. Bạn có thể khôi phục 3 phím ngay lập tức bằng Nút 'Khôi Phục 3 Phím' trong app hoặc câu lệnh số 3 phía trên bất cứ lúc nào.",
+          style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(6.dp))
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF030712))
-            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(12.dp))
-            .padding(12.dp)
-        ) {
-          Text(
-            text = directRestoreCmd,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 11.sp,
-            color = Color(0xFFF59E0B)
-          )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        OutlinedButton(
-          onClick = {
-            val clip = ClipData.newPlainText("Restore Command", directRestoreCmd)
-            clipboard.setPrimaryClip(clip)
-            Toast.makeText(context, "Đã sao chép lệnh khôi phục ADB!", Toast.LENGTH_SHORT).show()
-          },
-          shape = RoundedCornerShape(12.dp),
-          modifier = Modifier.fillMaxWidth()
-        ) {
-          Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-          Spacer(modifier = Modifier.width(8.dp))
-          Text(text = "Sao Chép Lệnh Khôi Phục 3 Phím", fontWeight = FontWeight.SemiBold)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Highlighted FAQ on ADB Conflict
-        Card(
-          shape = RoundedCornerShape(14.dp),
-          colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-          ),
-          modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-        ) {
-          Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = Color(0xFF10B981),
-                modifier = Modifier.size(20.dp)
-              )
-              Spacer(modifier = Modifier.width(8.dp))
-              Text(
-                text = "CÓ BỊ XUNG ĐỘT KHI VÀO CÀI ĐẶT BẬT LẠI?",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp),
-                color = Color(0xFF10B981)
-              )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-              text = "• HOÀN TOÀN KHÔNG BỊ XUNG ĐỘT HOẶC LỖI MÁY:",
-              style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-              color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-              text = "1. Lệnh ADB 'policy_control' chỉ là cờ hiển thị giao diện (Display Policy) của Android, hoàn toàn không sửa đổi file hệ thống hay can thiệp vào ROM.\n" +
-                  "2. Khi bạn vào Cài đặt điện thoại bật lại 3 phím hoặc chuyển sang cử chỉ gốc, Hệ thống Android (SystemUI) sẽ tự động nạp lại giao diện bình thường.\n" +
-                  "3. Bạn có thể khôi phục 3 phím ngay lập tức bằng Nút 'Khôi Phục' trong app hoặc câu lệnh xóa cờ phía trên bất cứ lúc nào.",
-              style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-          }
-        }
       }
     }
 
