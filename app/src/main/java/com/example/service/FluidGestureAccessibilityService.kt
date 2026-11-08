@@ -9,11 +9,13 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import com.example.MainActivity
 import com.example.data.GesturePreferencesRepository
 import com.example.model.AppGestureSettings
@@ -39,6 +41,10 @@ class FluidGestureAccessibilityService : AccessibilityService() {
   private var leftEdgeView: View? = null
   private var rightEdgeView: View? = null
   private var bottomEdgeView: View? = null
+  private var leftParams: WindowManager.LayoutParams? = null
+  private var rightParams: WindowManager.LayoutParams? = null
+  private var bottomParams: WindowManager.LayoutParams? = null
+  private var isImeVisible = false
 
   private var currentSettings: AppGestureSettings = AppGestureSettings()
   private var emergencyRescueHelper: EmergencyRescueHelper? = null
@@ -146,7 +152,46 @@ class FluidGestureAccessibilityService : AccessibilityService() {
   }
 
   override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-    // Passive monitoring
+    if (event?.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED) return
+
+    val imeNowVisible = try {
+      windows?.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD } == true
+    } catch (e: Exception) {
+      Log.w(TAG, "Failed to read window list for IME detection", e)
+      isImeVisible
+    }
+
+    if (imeNowVisible != isImeVisible) {
+      isImeVisible = imeNowVisible
+      updateImeTouchability()
+    }
+  }
+
+  /**
+   * The bottom (and potentially left/right) touch overlays sit at the screen edges where an
+   * on-screen keyboard also renders its bottom row of keys. Our overlay always consumes touches
+   * inside its bounds, so without this it silently eats keyboard taps in that region. Toggling
+   * FLAG_NOT_TOUCHABLE lets touches fall straight through to the IME while it is visible.
+   */
+  private fun updateImeTouchability() {
+    val wm = windowManager ?: return
+    listOf(leftEdgeView to leftParams, rightEdgeView to rightParams, bottomEdgeView to bottomParams)
+      .forEach { (view, params) ->
+        if (view == null || params == null) return@forEach
+        val shouldBeTouchable = !isImeVisible
+        val currentlyTouchable = params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE == 0
+        if (shouldBeTouchable == currentlyTouchable) return@forEach
+        params.flags = if (shouldBeTouchable) {
+          params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+        } else {
+          params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        }
+        try {
+          wm.updateViewLayout(view, params)
+        } catch (e: Exception) {
+          Log.w(TAG, "Failed to update overlay touchability for IME visibility change", e)
+        }
+      }
   }
 
   override fun onInterrupt() {
@@ -250,11 +295,15 @@ class FluidGestureAccessibilityService : AccessibilityService() {
       WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
       WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
-    fun safeAddView(view: View, params: WindowManager.LayoutParams): Boolean {
+    fun safeAddView(view: View, params: WindowManager.LayoutParams, label: String): Boolean {
+      if (isImeVisible) {
+        params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+      }
       return try {
         wm.addView(view, params)
         true
-      } catch (_: Exception) {
+      } catch (e: Exception) {
+        Log.w(TAG, "addView failed for $label overlay, retrying as TYPE_ACCESSIBILITY_OVERLAY", e)
         try {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && params.type != WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY) {
             params.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
@@ -263,7 +312,8 @@ class FluidGestureAccessibilityService : AccessibilityService() {
           } else {
             false
           }
-        } catch (_: Exception) {
+        } catch (e2: Exception) {
+          Log.e(TAG, "addView retry failed for $label overlay, gesture zone will not work", e2)
           false
         }
       }
@@ -294,8 +344,9 @@ class FluidGestureAccessibilityService : AccessibilityService() {
         y = 0
       }
 
-      if (safeAddView(leftView, leftParams)) {
+      if (safeAddView(leftView, leftParams, "left")) {
         leftEdgeView = leftView
+        this.leftParams = leftParams
       }
     }
 
@@ -324,8 +375,9 @@ class FluidGestureAccessibilityService : AccessibilityService() {
         y = 0
       }
 
-      if (safeAddView(rightView, rightParams)) {
+      if (safeAddView(rightView, rightParams, "right")) {
         rightEdgeView = rightView
+        this.rightParams = rightParams
       }
     }
 
@@ -351,8 +403,9 @@ class FluidGestureAccessibilityService : AccessibilityService() {
         y = yOffsetPx
       }
 
-      if (safeAddView(bottomView, bottomParams)) {
+      if (safeAddView(bottomView, bottomParams, "bottom")) {
         bottomEdgeView = bottomView
+        this.bottomParams = bottomParams
       }
     }
   }
@@ -360,17 +413,34 @@ class FluidGestureAccessibilityService : AccessibilityService() {
   fun removeOverlays() {
     val wm = windowManager ?: return
     leftEdgeView?.let {
-      try { wm.removeView(it) } catch (_: Exception) {}
+      try { wm.removeView(it) } catch (e: Exception) { Log.w(TAG, "removeView failed for left overlay", e) }
       leftEdgeView = null
+      leftParams = null
     }
     rightEdgeView?.let {
-      try { wm.removeView(it) } catch (_: Exception) {}
+      try { wm.removeView(it) } catch (e: Exception) { Log.w(TAG, "removeView failed for right overlay", e) }
       rightEdgeView = null
+      rightParams = null
     }
     bottomEdgeView?.let {
-      try { wm.removeView(it) } catch (_: Exception) {}
+      try { wm.removeView(it) } catch (e: Exception) { Log.w(TAG, "removeView failed for bottom overlay", e) }
       bottomEdgeView = null
+      bottomParams = null
     }
+  }
+
+  /**
+   * HyperOS/MIUI can silently detach an overlay window (or let the real system nav bar win the
+   * z-order fight for the bottom edge) without ever calling back into this service, so a view
+   * reference can go stale while the gesture zone it belongs to is still "enabled" in settings.
+   * Checked periodically by the keep-alive watchdog to force a refresh when that happens.
+   */
+  fun verifyOverlaysHealthy(): Boolean {
+    if (!currentSettings.serviceEnabled) return true
+    if (currentSettings.leftEdge.enabled && leftEdgeView?.isAttachedToWindow != true) return false
+    if (currentSettings.rightEdge.enabled && rightEdgeView?.isAttachedToWindow != true) return false
+    if (currentSettings.bottomBar.enabled && bottomEdgeView?.isAttachedToWindow != true) return false
+    return true
   }
 
   private fun createEdgeTouchView(
@@ -551,6 +621,8 @@ class FluidGestureAccessibilityService : AccessibilityService() {
   }
 
   companion object {
+    private const val TAG = "FluidFlowGesture"
+
     var instance: FluidGestureAccessibilityService? = null
     var isPlaygroundActive: Boolean = false
 

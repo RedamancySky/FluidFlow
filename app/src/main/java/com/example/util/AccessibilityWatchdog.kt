@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.R
 import com.example.service.FluidGestureAccessibilityService
@@ -37,7 +38,18 @@ object AccessibilityWatchdog {
    * detect-after-the-fact safety net rather than a guarantee of instant recovery.
    */
   fun checkAndRecover(context: Context, force: Boolean = false) {
-    val isDown = !isEnabledInSystem(context) || !FluidGestureAccessibilityService.isServiceConnected.value
+    val instance = FluidGestureAccessibilityService.instance
+    val isConnected = FluidGestureAccessibilityService.isServiceConnected.value
+
+    // Overlay windows can go stale (detached, or lose the z-order fight for the bottom edge on
+    // HyperOS/MIUI) without the service itself ever disconnecting, which a plain connection check
+    // would miss entirely. Self-heal this case silently - no need to alarm the user for it.
+    if (isConnected && instance != null && !instance.verifyOverlaysHealthy()) {
+      Log.w("AccessibilityWatchdog", "Overlay health check failed, forcing refreshOverlays()")
+      instance.refreshOverlays()
+    }
+
+    val isDown = !isEnabledInSystem(context) || !isConnected
     if (!isDown) return
 
     val now = System.currentTimeMillis()
